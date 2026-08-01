@@ -1101,7 +1101,7 @@ const GuestView = ({ orders, forcedShopId, user, lang, setLang }) => {
               <select
                 value={lang}
                 onChange={(e) => setLang(e.target.value)}
-                className="bg-transparent text-white outline-none cursor-pointer appearance-none pr-4 relative z-10 w-full"
+                className="bg-transparent text-white text-base outline-none cursor-pointer appearance-none pr-4 relative z-10 w-full"
               >
                 <option value="zh" className="text-gray-800">中文</option>
                 <option value="en" className="text-gray-800">English</option>
@@ -1115,7 +1115,7 @@ const GuestView = ({ orders, forcedShopId, user, lang, setLang }) => {
         </div>
         <div className="flex gap-2">
           <div className="bg-[#FDFCFB] p-1 rounded w-4/12 flex items-center"><Users size={14} className="text-[#8E806A] mr-1"/>
-            <select value={selectedRoom} onChange={e => setSelectedRoom(e.target.value)} className="bg-transparent font-bold text-[#595045] w-full outline-none">
+            <select value={selectedRoom} onChange={e => setSelectedRoom(e.target.value)} className="bg-transparent font-bold text-base text-[#595045] w-full outline-none">
               <option value="" disabled>{t.selectRoom}</option>
               {ROOMS.map(r => <option key={r} value={r}>{r}{t.roomSuffix}</option>)}
             </select>
@@ -1182,7 +1182,7 @@ const GuestView = ({ orders, forcedShopId, user, lang, setLang }) => {
           value={nickname} 
           onChange={e => setNickname(e.target.value)} 
           placeholder={t.nicknamePlaceholder} 
-          className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-[#595045] focus:outline-none focus:border-[#8E806A] focus:ring-1 focus:ring-[#8E806A]"
+          className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-base text-[#595045] focus:outline-none focus:border-[#8E806A] focus:ring-1 focus:ring-[#8E806A]"
           maxLength={15}
         />
         <div className="flex justify-between gap-3">
