@@ -38,7 +38,9 @@ const UI_TEXT = {
     iceLabel: "🧊 冰 (Ice)", warmLabel: "♨️ 溫 (Warm)",
     cancelOrder: "取消訂單", alertCancelConfirm: "確定要取消此房間的訂單嗎？",
     receiptTitle: "訂單明細", receiptTotal: "本次金額", receiptReminder: "📌 建議截圖保存此明細，以便與店家核對",
-    nicknamePlaceholder: "輸入暱稱 (選填)", alertTitle: "系統提示", alertConfirm: "確定"
+    nicknamePlaceholder: "輸入暱稱 (選填)", alertTitle: "系統提示", alertConfirm: "確定",
+    personalReceiptTitle: "個人訂單明細", nicknameReceiptSuffix: " 的訂單明細",
+    personalSubtotal: "個人小計", roomSharedDisclaimer: "💡 此僅為您個人的點餐明細，不包含同房其他人之餐點。"
   },
   en: {
     title: "Tea Cloud", subtitle: "Order", selectRoom: "Select Room", roomSuffix: "",
@@ -49,7 +51,9 @@ const UI_TEXT = {
     iceLabel: "🧊 Ice", warmLabel: "♨️ Warm",
     cancelOrder: "Cancel Order", alertCancelConfirm: "Are you sure you want to cancel this order?",
     receiptTitle: "Order Details", receiptTotal: "Total Amount", receiptReminder: "📌 Please save a screenshot of this receipt for your records.",
-    nicknamePlaceholder: "Nickname (Optional)", alertTitle: "System Alert", alertConfirm: "OK"
+    nicknamePlaceholder: "Nickname (Optional)", alertTitle: "System Alert", alertConfirm: "OK",
+    personalReceiptTitle: "Personal Order Details", nicknameReceiptSuffix: "'s Order Details",
+    personalSubtotal: "Personal Subtotal", roomSharedDisclaimer: "💡 This is your personal order only. It excludes other orders from the same room."
   },
   ko: {
     title: "차윈주", subtitle: "주문", selectRoom: "객실 선택", roomSuffix: "호",
@@ -60,7 +64,9 @@ const UI_TEXT = {
     iceLabel: "🧊 아이스 (Ice)", warmLabel: "♨️ 따뜻한 (Warm)",
     cancelOrder: "주문 취소", alertCancelConfirm: "이 주문을 취소하시겠습니까?",
     receiptTitle: "주문 내역", receiptTotal: "결제 금액", receiptReminder: "📌 확인을 위해 이 영수증을 캡처해 두시길 권장합니다.",
-    nicknamePlaceholder: "닉네임 (선택)", alertTitle: "시스템 알림", alertConfirm: "확인"
+    nicknamePlaceholder: "닉네임 (선택)", alertTitle: "시스템 알림", alertConfirm: "확인",
+    personalReceiptTitle: "개인 주문 내역", nicknameReceiptSuffix: "님의 주문 내역",
+    personalSubtotal: "개인 소계", roomSharedDisclaimer: "💡 본인의 개인 주문 내역입니다. 같은 방 일행의 주문은 포함되지 않습니다."
   },
   ja: {
     title: "茶雲居", subtitle: "注文", selectRoom: "お部屋を選択", roomSuffix: "号室",
@@ -71,7 +77,9 @@ const UI_TEXT = {
     iceLabel: "🧊 アイス (Ice)", warmLabel: "♨️ ホット (Warm)",
     cancelOrder: "注文キャンセル", alertCancelConfirm: "この注文をキャンセルしますか？",
     receiptTitle: "注文詳細", receiptTotal: "合計金額", receiptReminder: "📌 確認のため、この明細のスクリーンショットを保存してください。",
-    nicknamePlaceholder: "ニックネーム (任意)", alertTitle: "システム通知", alertConfirm: "確認"
+    nicknamePlaceholder: "ニックネーム (任意)", alertTitle: "システム通知", alertConfirm: "確認",
+    personalReceiptTitle: "個人注文詳細", nicknameReceiptSuffix: " の注文詳細",
+    personalSubtotal: "個人小計", roomSharedDisclaimer: "💡 これはあなた個人の注文です。同室の他の方の注文は含まれていません。"
   }
 };
 
@@ -1016,7 +1024,7 @@ const GuestView = ({ orders, forcedShopId, user, lang, setLang }) => {
 
       <div className="w-full max-w-sm bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden mb-8">
         <div className="bg-[#8E806A] text-white px-4 py-2 flex justify-between items-center">
-          <span className="font-bold text-sm flex items-center gap-1"><ClipboardList size={14}/> {t.receiptTitle}</span>
+          <span className="font-bold text-sm flex items-center gap-1"><ClipboardList size={14}/> {nickname.trim() ? `${nickname.trim()}${t.nicknameReceiptSuffix}` : t.personalReceiptTitle}</span>
           <span className="text-xs opacity-80">{selectedRoom}{t.roomSuffix}</span>
         </div>
         <div className="p-4 bg-gray-50 space-y-2">
@@ -1043,9 +1051,13 @@ const GuestView = ({ orders, forcedShopId, user, lang, setLang }) => {
           })}
         </div>
         <div className="px-4 py-3 bg-[#EBE8E1]/30 border-t flex justify-between items-center font-bold text-[#595045]">
-          <span>{t.receiptTotal}</span>
+          <span>{t.personalSubtotal}</span>
           <span className="text-lg text-[#8E806A]">${totalPrice}</span>
         </div>
+      </div>
+
+      <div className="w-full max-w-sm mb-4 px-2">
+        <p className="text-xs text-gray-500 text-center">{t.roomSharedDisclaimer}</p>
       </div>
 
       <div className="w-full max-w-sm mb-8 bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg text-sm flex items-center justify-center gap-2 shadow-sm">
