@@ -36,7 +36,8 @@ const UI_TEXT = {
     alertSelectRoom: "請先選擇房號！", alertNetwork: "傳送失敗，請檢查網路連線",
     selectTemp: "選擇冰/溫", selected: "已選", done: "完成",
     iceLabel: "🧊 冰 (Ice)", warmLabel: "♨️ 溫 (Warm)",
-    cancelOrder: "取消訂單", alertCancelConfirm: "確定要取消此房間的訂單嗎？",
+    cancelOrder: "取消訂單", alertCancelConfirm: "確定要取消您個人的餐點嗎？（不影響同房其他人的訂單）",
+    modalCancelTitle: "取消訂單", modalBtnNo: "保留餐點", modalBtnYes: "確定取消",
     receiptTitle: "訂單明細", receiptTotal: "本次金額", receiptReminder: "📌 建議截圖保存此明細，以便與店家核對",
     nicknamePlaceholder: "輸入暱稱 (選填)", alertTitle: "系統提示", alertConfirm: "確定",
     personalReceiptTitle: "個人訂單明細", nicknameReceiptSuffix: " 的訂單明細",
@@ -49,7 +50,8 @@ const UI_TEXT = {
     alertSelectRoom: "Please select a room first!", alertNetwork: "Connection error",
     selectTemp: "Ice/Warm", selected: "Selected", done: "Done",
     iceLabel: "🧊 Ice", warmLabel: "♨️ Warm",
-    cancelOrder: "Cancel Order", alertCancelConfirm: "Are you sure you want to cancel this order?",
+    cancelOrder: "Cancel Order", alertCancelConfirm: "Are you sure you want to cancel your personal order? (Other orders in this room won't be affected)",
+    modalCancelTitle: "Cancel Order", modalBtnNo: "Keep Order", modalBtnYes: "Yes, Cancel",
     receiptTitle: "Order Details", receiptTotal: "Total Amount", receiptReminder: "📌 Please save a screenshot of this receipt for your records.",
     nicknamePlaceholder: "Nickname (Optional)", alertTitle: "System Alert", alertConfirm: "OK",
     personalReceiptTitle: "Personal Order Details", nicknameReceiptSuffix: "'s Order Details",
@@ -62,7 +64,8 @@ const UI_TEXT = {
     alertSelectRoom: "먼저 객실 번호를 선택해주세요!", alertNetwork: "네트워크 연결 오류",
     selectTemp: "아이스/핫 선택", selected: "선택됨", done: "완료",
     iceLabel: "🧊 아이스 (Ice)", warmLabel: "♨️ 따뜻한 (Warm)",
-    cancelOrder: "주문 취소", alertCancelConfirm: "이 주문을 취소하시겠습니까?",
+    cancelOrder: "주문 취소", alertCancelConfirm: "본인의 개인 주문을 취소하시겠습니까? (같은 방 일행의 주문에는 영향을 주지 않습니다)",
+    modalCancelTitle: "주문 취소", modalBtnNo: "유지하기", modalBtnYes: "취소하기",
     receiptTitle: "주문 내역", receiptTotal: "결제 금액", receiptReminder: "📌 확인을 위해 이 영수증을 캡처해 두시길 권장합니다.",
     nicknamePlaceholder: "닉네임 (선택)", alertTitle: "시스템 알림", alertConfirm: "확인",
     personalReceiptTitle: "개인 주문 내역", nicknameReceiptSuffix: "님의 주문 내역",
@@ -75,7 +78,8 @@ const UI_TEXT = {
     alertSelectRoom: "先にお部屋番号を選択してください！", alertNetwork: "ネットワーク接続を確認してください",
     selectTemp: "アイス/ホット", selected: "選択済", done: "完了",
     iceLabel: "🧊 アイス (Ice)", warmLabel: "♨️ ホット (Warm)",
-    cancelOrder: "注文キャンセル", alertCancelConfirm: "この注文をキャンセルしますか？",
+    cancelOrder: "注文キャンセル", alertCancelConfirm: "あなた個人の注文をキャンセルしてもよろしいですか？（同室の他の方の注文には影響しません）",
+    modalCancelTitle: "注文キャンセル", modalBtnNo: "そのままにする", modalBtnYes: "キャンセルする",
     receiptTitle: "注文詳細", receiptTotal: "合計金額", receiptReminder: "📌 確認のため、この明細のスクリーンショットを保存してください。",
     nicknamePlaceholder: "ニックネーム (任意)", alertTitle: "システム通知", alertConfirm: "確認",
     personalReceiptTitle: "個人注文詳細", nicknameReceiptSuffix: " の注文詳細",
@@ -830,6 +834,7 @@ const GuestView = ({ orders, forcedShopId, user, lang, setLang }) => {
   const [submitted, setSubmitted] = useState(false);
   const [activeDrink, setActiveDrink] = useState(null);
   const [activeCustomItem, setActiveCustomItem] = useState(null);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
 
   const currentOrderRef = useRef({ id: null, updatedAt: null, initialCart: {} });
   const cartRef = useRef({});
@@ -964,51 +969,50 @@ const GuestView = ({ orders, forcedShopId, user, lang, setLang }) => {
     setIsSubmitting(false);
   };
 
-  const cancelOrder = async () => {
-    if (window.confirm(t.alertCancelConfirm)) {
-      if (!user || !user.uid) return;
-      setIsSubmitting(true);
-      try {
-        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'orders', selectedRoom);
-        await runTransaction(db, async (transaction) => {
-          const sfDoc = await transaction.get(docRef);
-          if (!sfDoc.exists()) return;
-          let data = sfDoc.data();
-          if (!data.deviceOrders || !data.deviceOrders[user.uid]) return;
+  const confirmCancelOrder = async () => {
+    if (!user || !user.uid) return;
+    setIsSubmitting(true);
+    try {
+      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'orders', selectedRoom);
+      await runTransaction(db, async (transaction) => {
+        const sfDoc = await transaction.get(docRef);
+        if (!sfDoc.exists()) return;
+        let data = sfDoc.data();
+        if (!data.deviceOrders || !data.deviceOrders[user.uid]) return;
 
-          delete data.deviceOrders[user.uid];
+        delete data.deviceOrders[user.uid];
 
-          if (Object.keys(data.deviceOrders).length === 0) {
-            transaction.delete(docRef);
-            return;
-          }
+        if (Object.keys(data.deviceOrders).length === 0) {
+          transaction.delete(docRef);
+          return;
+        }
 
-          let newItems = {};
-          let newTotalPrice = 0;
-          Object.values(data.deviceOrders).forEach(deviceOrder => {
-            const devItems = deviceOrder.items || {};
-            Object.entries(devItems).forEach(([id, qty]) => {
-              newItems[id] = (newItems[id] || 0) + qty;
-              const baseId = getBaseId(id);
-              const item = MENU_MAP[baseId];
-              if (item) {
-                const extra = getExtraPrice(id);
-                newTotalPrice += (item.price + extra) * qty;
-              }
-            });
-          });
-
-          transaction.update(docRef, {
-            deviceOrders: data.deviceOrders,
-            items: newItems,
-            totalPrice: newTotalPrice,
-            updatedAt: new Date().toISOString()
+        let newItems = {};
+        let newTotalPrice = 0;
+        Object.values(data.deviceOrders).forEach(deviceOrder => {
+          const devItems = deviceOrder.items || {};
+          Object.entries(devItems).forEach(([id, qty]) => {
+            newItems[id] = (newItems[id] || 0) + qty;
+            const baseId = getBaseId(id);
+            const item = MENU_MAP[baseId];
+            if (item) {
+              const extra = getExtraPrice(id);
+              newTotalPrice += (item.price + extra) * qty;
+            }
           });
         });
-        setCart({});
-      } catch(e) { window.customAlert(t.alertNetwork + ": " + e.message); }
-      setIsSubmitting(false);
-    }
+
+        transaction.update(docRef, {
+          deviceOrders: data.deviceOrders,
+          items: newItems,
+          totalPrice: newTotalPrice,
+          updatedAt: new Date().toISOString()
+        });
+      });
+      setCart({});
+      setIsCancelModalOpen(false);
+    } catch(e) { window.customAlert(t.alertNetwork + ": " + e.message); }
+    setIsSubmitting(false);
   };
 
   const getShopName = (s) => lang === 'zh' ? s.name.slice(0,4) : lang === 'ko' ? s.name_ko : lang === 'ja' ? s.name_ja : s.name_en;
@@ -1185,7 +1189,7 @@ const GuestView = ({ orders, forcedShopId, user, lang, setLang }) => {
           <div className="text-xs text-gray-500 flex flex-col justify-center"><div>{selectedRoom || "-"} • {totalQty}</div><div className="text-xl font-bold text-[#8E806A]">${totalPrice}</div></div>
           <div className="flex gap-2 flex-1">
             {orders.some(o => o.roomNumber === selectedRoom) && (
-              <button onClick={cancelOrder} disabled={isSubmitting} className="bg-gray-200 text-gray-600 px-4 py-2 rounded-lg font-bold disabled:opacity-50 shadow-sm">{t.cancelOrder}</button>
+              <button onClick={() => setIsCancelModalOpen(true)} disabled={isSubmitting} className="bg-gray-200 text-gray-600 px-4 py-2 rounded-lg font-bold disabled:opacity-50 shadow-sm">{t.cancelOrder}</button>
             )}
             <button onClick={submit} disabled={!totalQty || isSubmitting} className="bg-[#8E806A] text-white px-6 py-2 rounded-lg font-bold flex-1 disabled:opacity-50 shadow-sm">{isSubmitting ? '...' : t.submit}</button>
           </div>
@@ -1249,6 +1253,22 @@ const GuestView = ({ orders, forcedShopId, user, lang, setLang }) => {
               );
             })}
             <button onClick={() => setActiveCustomItem(null)} className="w-full bg-[#8E806A] text-white py-3 rounded-lg font-bold shadow-md">{t.done}</button>
+          </div>
+        </div>
+      )}
+
+      {isCancelModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-white rounded-xl max-w-xs w-full p-6 shadow-2xl text-center">
+            <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4 text-red-600">
+              <AlertTriangle size={28} />
+            </div>
+            <h3 className="text-lg font-bold text-[#595045] mb-2">{t.modalCancelTitle}</h3>
+            <p className="text-gray-600 text-sm mb-6">{t.alertCancelConfirm}</p>
+            <div className="flex gap-3">
+              <button onClick={() => setIsCancelModalOpen(false)} className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 py-2.5 rounded-lg font-bold transition-colors">{t.modalBtnNo}</button>
+              <button onClick={confirmCancelOrder} disabled={isSubmitting} className="w-full bg-red-500 hover:bg-red-600 text-white py-2.5 rounded-lg font-bold transition-colors disabled:opacity-50">{t.modalBtnYes}</button>
+            </div>
           </div>
         </div>
       )}
