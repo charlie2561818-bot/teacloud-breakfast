@@ -1475,7 +1475,7 @@ const OwnerDashboard = ({ orders }) => {
 
   const generatePersonalOrderText = () => {
     if (Object.keys(personalCart).length === 0) return window.customAlert("購物車是空的，請先選擇餐點");
-    let text = "【茶雲居家成】\n";
+    let text = "";
     Object.entries(personalCart).forEach(([id, qty]) => {
       const baseId = getBaseId(id);
       const item = MENU_MAP[baseId];
@@ -1486,6 +1486,7 @@ const OwnerDashboard = ({ orders }) => {
         text += `${item.name}${fullSuffix ? ' ' + fullSuffix : ''} x${qty}\n`;
       }
     });
+    text = text.trim();
 
     const el = document.createElement('textarea');
     el.value = text;
