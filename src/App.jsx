@@ -41,7 +41,8 @@ const UI_TEXT = {
     receiptTitle: "訂單明細", receiptTotal: "本次金額", receiptReminder: "📌 建議截圖保存此明細，以便與店家核對",
     nicknamePlaceholder: "輸入暱稱 (選填)", alertTitle: "系統提示", alertConfirm: "確定",
     personalReceiptTitle: "個人訂單明細", nicknameReceiptSuffix: " 的訂單明細",
-    personalSubtotal: "個人小計", roomSharedDisclaimer: "💡 此僅為您個人的點餐明細，不包含同房其他人之餐點。"
+    personalSubtotal: "個人小計", roomSharedDisclaimer: "💡 此僅為您個人的點餐明細，不包含同房其他人之餐點。",
+    roomTotalBtn: "查看同房總明細", roomTotalTitle: "同房總訂單", emptyRoomOrder: "目前無人點餐", modifyHint: "💡 如需修改，請直接於主畫面調整數量後再次送出"
   },
   en: {
     title: "Tea Cloud", subtitle: "Order", selectRoom: "Select Room", roomSuffix: "",
@@ -55,7 +56,8 @@ const UI_TEXT = {
     receiptTitle: "Order Details", receiptTotal: "Total Amount", receiptReminder: "📌 Please save a screenshot of this receipt for your records.",
     nicknamePlaceholder: "Nickname (Optional)", alertTitle: "System Alert", alertConfirm: "OK",
     personalReceiptTitle: "Personal Order Details", nicknameReceiptSuffix: "'s Order Details",
-    personalSubtotal: "Personal Subtotal", roomSharedDisclaimer: "💡 This is your personal order only. It excludes other orders from the same room."
+    personalSubtotal: "Personal Subtotal", roomSharedDisclaimer: "💡 This is your personal order only. It excludes other orders from the same room.",
+    roomTotalBtn: "View Room Total", roomTotalTitle: "Room Total Orders", emptyRoomOrder: "No orders yet", modifyHint: "💡 To modify, please adjust the quantity on the main screen and submit again."
   },
   ko: {
     title: "차윈주", subtitle: "주문", selectRoom: "객실 선택", roomSuffix: "호",
@@ -69,7 +71,8 @@ const UI_TEXT = {
     receiptTitle: "주문 내역", receiptTotal: "결제 금액", receiptReminder: "📌 확인을 위해 이 영수증을 캡처해 두시길 권장합니다.",
     nicknamePlaceholder: "닉네임 (선택)", alertTitle: "시스템 알림", alertConfirm: "확인",
     personalReceiptTitle: "개인 주문 내역", nicknameReceiptSuffix: "님의 주문 내역",
-    personalSubtotal: "개인 소계", roomSharedDisclaimer: "💡 본인의 개인 주문 내역입니다. 같은 방 일행의 주문은 포함되지 않습니다."
+    personalSubtotal: "개인 소계", roomSharedDisclaimer: "💡 본인의 개인 주문 내역입니다. 같은 방 일행의 주문은 포함되지 않습니다.",
+    roomTotalBtn: "일행 주문 합계", roomTotalTitle: "일행 주문 합계", emptyRoomOrder: "아직 주문이 없습니다", modifyHint: "💡 수정을 원하시면 메인 화면에서 수량을 조정한 후 다시 제출해 주세요."
   },
   ja: {
     title: "茶雲居", subtitle: "注文", selectRoom: "お部屋を選択", roomSuffix: "号室",
@@ -83,7 +86,8 @@ const UI_TEXT = {
     receiptTitle: "注文詳細", receiptTotal: "合計金額", receiptReminder: "📌 確認のため、この明細のスクリーンショットを保存してください。",
     nicknamePlaceholder: "ニックネーム (任意)", alertTitle: "システム通知", alertConfirm: "確認",
     personalReceiptTitle: "個人注文詳細", nicknameReceiptSuffix: " の注文詳細",
-    personalSubtotal: "個人小計", roomSharedDisclaimer: "💡 これはあなた個人の注文です。同室の他の方の注文は含まれていません。"
+    personalSubtotal: "個人小計", roomSharedDisclaimer: "💡 これはあなた個人の注文です。同室の他の方の注文は含まれていません。",
+    roomTotalBtn: "同室の注文合計", roomTotalTitle: "同室の注文合計", emptyRoomOrder: "まだ注文がありません", modifyHint: "💡 変更する場合は、メイン画面で数量を調整して再度送信してください。"
   }
 };
 
@@ -835,12 +839,14 @@ const GuestView = ({ orders, forcedShopId, user, lang, setLang }) => {
   const [activeDrink, setActiveDrink] = useState(null);
   const [activeCustomItem, setActiveCustomItem] = useState(null);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [isRoomTotalModalOpen, setIsRoomTotalModalOpen] = useState(false);
 
   const currentOrderRef = useRef({ id: null, updatedAt: null, initialCart: {} });
   const cartRef = useRef({});
   useEffect(() => { cartRef.current = cart; }, [cart]);
 
   const t = UI_TEXT[lang] || UI_TEXT['zh'];
+  const currentRoomOrder = orders.find(o => o.id === selectedRoom);
 
   useEffect(() => {
     if (!selectedRoom) {
@@ -1068,6 +1074,10 @@ const GuestView = ({ orders, forcedShopId, user, lang, setLang }) => {
         <span>{t.receiptReminder}</span>
       </div>
 
+      <div className="w-full max-w-sm mb-4 px-2">
+        <p className="text-sm text-gray-500 mt-4 text-center">{t.modifyHint}</p>
+      </div>
+
       <button onClick={() => setSubmitted(false)} className="px-10 py-3 bg-[#8E806A] text-white font-bold rounded-full shadow-sm hover:bg-[#7a6d59] transition-colors">{t.backHome}</button>
     </div>
   );
@@ -1186,7 +1196,11 @@ const GuestView = ({ orders, forcedShopId, user, lang, setLang }) => {
           maxLength={15}
         />
         <div className="flex justify-between gap-3">
-          <div className="text-xs text-gray-500 flex flex-col justify-center"><div>{selectedRoom || "-"} • {totalQty}</div><div className="text-xl font-bold text-[#8E806A]">${totalPrice}</div></div>
+          <div className="text-xs text-gray-500 flex flex-col justify-center">
+            <div>{selectedRoom || "-"} • {totalQty}</div>
+            <div className="text-xl font-bold text-[#8E806A]">${totalPrice}</div>
+            {selectedRoom && <div onClick={() => setIsRoomTotalModalOpen(true)} className="text-xs text-blue-500 underline mt-1 cursor-pointer">{t.roomTotalBtn}</div>}
+          </div>
           <div className="flex gap-2 flex-1">
             {orders.some(o => o.roomNumber === selectedRoom) && (
               <button onClick={() => setIsCancelModalOpen(true)} disabled={isSubmitting} className="bg-gray-200 text-gray-600 px-4 py-2 rounded-lg font-bold disabled:opacity-50 shadow-sm">{t.cancelOrder}</button>
@@ -1269,6 +1283,72 @@ const GuestView = ({ orders, forcedShopId, user, lang, setLang }) => {
               <button onClick={() => setIsCancelModalOpen(false)} className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 py-2.5 rounded-lg font-bold transition-colors">{t.modalBtnNo}</button>
               <button onClick={confirmCancelOrder} disabled={isSubmitting} className="w-full bg-red-500 hover:bg-red-600 text-white py-2.5 rounded-lg font-bold transition-colors disabled:opacity-50">{t.modalBtnYes}</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {isRoomTotalModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-[#FAF9F6] rounded-xl max-w-sm w-full shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+            <div className="flex justify-between items-center p-4 border-b bg-white">
+              <h3 className="font-bold text-[#595045]">{t.roomTotalTitle} - {selectedRoom}{t.roomSuffix}</h3>
+              <button onClick={() => setIsRoomTotalModalOpen(false)}><X size={20} className="text-gray-400"/></button>
+            </div>
+            
+            <div className="p-4 overflow-y-auto space-y-3">
+              {(!currentRoomOrder || !currentRoomOrder.deviceOrders || Object.keys(currentRoomOrder.deviceOrders).length === 0) ? (
+                <div className="text-center py-10 opacity-50">{t.emptyRoomOrder}</div>
+              ) : (
+                Object.keys(currentRoomOrder.deviceOrders).sort().map((uid, idx) => {
+                  const deviceOrder = currentRoomOrder.deviceOrders[uid];
+                  const deviceLetter = String.fromCharCode(65 + idx);
+                  const deviceName = deviceOrder.nickname ? `📱 ${deviceOrder.nickname}` : `📱 ${deviceLetter}裝置`;
+                  const d = deviceOrder.updatedAt ? new Date(deviceOrder.updatedAt) : null;
+                  const timeStr = d ? `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}` : '';
+                  
+                  return (
+                    <div key={uid} className="border border-gray-200 rounded-md bg-gray-50 overflow-hidden shadow-sm">
+                      <div className="flex justify-between items-center border-b border-gray-200 bg-gray-100 px-3 py-1.5">
+                        <span className="font-bold text-xs text-[#595045] flex items-center gap-1.5">
+                          <Smartphone size={12} className="text-[#8E806A]"/> {deviceName}
+                          {timeStr && (
+                            <span className="text-[10px] text-gray-400 font-mono font-normal ml-1 flex items-center gap-1">
+                              <Clock size={10}/> {timeStr}
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                      <div className="p-2 space-y-1.5 bg-white">
+                        {Object.entries(flattenItems(deviceOrder.items)).map(([id, qty]) => {
+                          const baseId = getBaseId(id);
+                          const item = MENU_MAP[baseId];
+                          if (!item) return null;
+                          const dotColor = item.shopId === 'shopA' ? 'bg-orange-400' : item.shopId === 'shopB' ? 'bg-blue-400' : item.shopId === 'shopC' ? 'bg-green-500' : 'bg-pink-400';
+                          const suffix = getTempLabel(id, lang);
+                          const customSuffix = getCustomLabel(id, lang);
+                          return (
+                            <div key={id} className="flex justify-between text-[13px] items-center">
+                              <span className="flex gap-2 items-center">
+                                <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`}></span>
+                                <span className="text-[#595045] font-medium">{getItemName(item)}</span> 
+                                {(suffix || customSuffix) && <span className="text-gray-400 text-[11px] bg-gray-50 px-1 rounded">{suffix}{customSuffix}</span>}
+                              </span>
+                              <span className="font-bold text-[#8E806A] bg-gray-100 px-1.5 rounded-sm">x{qty}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+            {currentRoomOrder && currentRoomOrder.totalPrice > 0 && (
+              <div className="bg-white p-4 border-t flex justify-between items-center font-bold">
+                <span className="text-[#595045]">{t.total}</span>
+                <span className="text-xl text-[#8E806A]">${currentRoomOrder.totalPrice}</span>
+              </div>
+            )}
           </div>
         </div>
       )}
