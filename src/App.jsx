@@ -909,6 +909,20 @@ const GuestView = ({ orders, forcedShopId, user, lang, setLang }) => {
     });
   };
 
+  const handleExactQty = (id, value) => {
+    if (!selectedRoom) return window.customAlert(t.alertSelectRoom);
+    const parsed = parseInt(value, 10);
+    if (isNaN(parsed) || parsed <= 0) {
+      setCart(prev => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    } else {
+      setCart(prev => ({ ...prev, [id]: parsed }));
+    }
+  };
+
   const totalQty = Object.values(cart).reduce((a, b) => a + b, 0);
   const totalPrice = Object.entries(cart).reduce((sum, [id, qty]) => {
     const baseId = getBaseId(id);
@@ -1173,7 +1187,7 @@ const GuestView = ({ orders, forcedShopId, user, lang, setLang }) => {
                       ) : (
                         <>
                           <button onClick={() => selectedRoom ? updateQty(i.id, -1) : window.customAlert(t.alertSelectRoom)} disabled={!qty} className="w-5 h-5 flex items-center justify-center rounded text-gray-400 disabled:opacity-30">-</button>
-                          <span className={`text-xs font-bold w-4 text-center flex items-center justify-center ${qty ? 'text-[#8E806A]' : 'text-gray-300'}`}>{qty}</span>
+                          <input type="number" value={qty || ""} onChange={(e) => handleExactQty(i.id, e.target.value)} className={`text-base font-bold w-8 text-center bg-transparent outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none flex items-center justify-center ${qty ? 'text-[#8E806A]' : 'text-gray-300'}`} />
                           <button onClick={() => selectedRoom ? updateQty(i.id, 1) : window.customAlert(t.alertSelectRoom)} className="w-5 h-5 bg-white shadow-sm rounded text-[#8E806A]">+</button>
                         </>
                       )}
@@ -1222,7 +1236,7 @@ const GuestView = ({ orders, forcedShopId, user, lang, setLang }) => {
               <span className="font-bold text-blue-800">{t.iceLabel}</span>
               <div className="flex items-center gap-3 bg-white p-1 rounded shadow-sm">
                 <button onClick={() => updateQty(activeDrink.id + '_ice', -1)} disabled={!(cart[activeDrink.id + '_ice'])} className="w-6 h-6 flex items-center justify-center rounded text-gray-400 disabled:opacity-30 font-bold">-</button>
-                <span className="w-4 text-center font-bold text-[#8E806A]">{cart[activeDrink.id + '_ice'] || 0}</span>
+                <input type="number" value={cart[activeDrink.id + '_ice'] || ""} onChange={(e) => handleExactQty(activeDrink.id + '_ice', e.target.value)} className="w-8 text-base text-center font-bold text-[#8E806A] bg-transparent outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
                 <button onClick={() => updateQty(activeDrink.id + '_ice', 1)} className="w-6 h-6 flex items-center justify-center rounded bg-[#8E806A] text-white font-bold">+</button>
               </div>
             </div>
@@ -1231,7 +1245,7 @@ const GuestView = ({ orders, forcedShopId, user, lang, setLang }) => {
               <span className="font-bold text-orange-800">{t.warmLabel}</span>
               <div className="flex items-center gap-3 bg-white p-1 rounded shadow-sm">
                 <button onClick={() => updateQty(activeDrink.id + '_warm', -1)} disabled={!(cart[activeDrink.id + '_warm'])} className="w-6 h-6 flex items-center justify-center rounded text-gray-400 disabled:opacity-30 font-bold">-</button>
-                <span className="w-4 text-center font-bold text-[#8E806A]">{cart[activeDrink.id + '_warm'] || 0}</span>
+                <input type="number" value={cart[activeDrink.id + '_warm'] || ""} onChange={(e) => handleExactQty(activeDrink.id + '_warm', e.target.value)} className="w-8 text-base text-center font-bold text-[#8E806A] bg-transparent outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
                 <button onClick={() => updateQty(activeDrink.id + '_warm', 1)} className="w-6 h-6 flex items-center justify-center rounded bg-[#8E806A] text-white font-bold">+</button>
               </div>
             </div>
@@ -1260,7 +1274,7 @@ const GuestView = ({ orders, forcedShopId, user, lang, setLang }) => {
                   </span>
                   <div className="flex items-center gap-3 bg-white p-1 rounded shadow-sm">
                     <button onClick={() => updateQty(cartKey, -1)} disabled={!optQty} className="w-6 h-6 flex items-center justify-center rounded text-gray-400 disabled:opacity-30 font-bold">-</button>
-                    <span className="w-4 text-center font-bold text-[#8E806A]">{optQty}</span>
+                    <input type="number" value={optQty || ""} onChange={(e) => handleExactQty(cartKey, e.target.value)} className="w-8 text-base text-center font-bold text-[#8E806A] bg-transparent outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
                     <button onClick={() => updateQty(cartKey, 1)} className="w-6 h-6 flex items-center justify-center rounded bg-[#8E806A] text-white font-bold">+</button>
                   </div>
                 </div>
@@ -1544,6 +1558,19 @@ const OwnerDashboard = ({ orders }) => {
     });
   };
 
+  const handlePersonalExactQty = (id, value) => {
+    const parsed = parseInt(value, 10);
+    if (isNaN(parsed) || parsed <= 0) {
+      setPersonalCart(prev => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    } else {
+      setPersonalCart(prev => ({ ...prev, [id]: parsed }));
+    }
+  };
+
   const personalTotalQty = Object.values(personalCart).reduce((a, b) => a + b, 0);
   const personalTotalPrice = Object.entries(personalCart).reduce((sum, [id, qty]) => {
     const baseId = getBaseId(id);
@@ -1796,7 +1823,7 @@ const OwnerDashboard = ({ orders }) => {
                               ) : (
                                 <>
                                   <button onClick={() => updatePersonalQty(i.id, -1)} disabled={!qty} className="w-8 h-8 flex items-center justify-center rounded bg-white text-gray-500 disabled:opacity-30 font-bold shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors">-</button>
-                                  <span className={`text-sm font-bold w-6 text-center flex items-center justify-center ${qty ? 'text-[#8E806A]' : 'text-gray-400'}`}>{qty}</span>
+                                  <input type="number" value={qty || ""} onChange={(e) => handlePersonalExactQty(i.id, e.target.value)} className={`text-base font-bold w-10 text-center bg-transparent outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none flex items-center justify-center ${qty ? 'text-[#8E806A]' : 'text-gray-400'}`} />
                                   <button onClick={() => updatePersonalQty(i.id, 1)} className="w-8 h-8 flex items-center justify-center rounded bg-[#8E806A] text-white font-bold shadow-sm hover:bg-[#7a6d59] transition-colors">+</button>
                                 </>
                               )}
@@ -1822,7 +1849,7 @@ const OwnerDashboard = ({ orders }) => {
                     <span className="font-bold text-blue-800 flex items-center gap-2"><span className="text-xl">🧊</span> 冰 (Ice)</span>
                     <div className="flex items-center gap-3 bg-white p-1 rounded-lg shadow-sm">
                       <button onClick={() => updatePersonalQty(activePersonalDrink.id + '_ice', -1)} disabled={!(personalCart[activePersonalDrink.id + '_ice'])} className="w-8 h-8 flex items-center justify-center rounded-md text-gray-500 disabled:opacity-30 font-bold bg-gray-50 hover:bg-gray-100 transition-colors">-</button>
-                      <span className="w-6 text-center font-bold text-lg text-[#8E806A]">{personalCart[activePersonalDrink.id + '_ice'] || 0}</span>
+                      <input type="number" value={personalCart[activePersonalDrink.id + '_ice'] || ""} onChange={(e) => handlePersonalExactQty(activePersonalDrink.id + '_ice', e.target.value)} className="w-10 text-base text-center font-bold text-[#8E806A] bg-transparent outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
                       <button onClick={() => updatePersonalQty(activePersonalDrink.id + '_ice', 1)} className="w-8 h-8 flex items-center justify-center rounded-md bg-[#8E806A] text-white font-bold hover:bg-[#7a6d59] transition-colors">+</button>
                     </div>
                   </div>
@@ -1831,7 +1858,7 @@ const OwnerDashboard = ({ orders }) => {
                     <span className="font-bold text-orange-800 flex items-center gap-2"><span className="text-xl">♨️</span> 溫 (Warm)</span>
                     <div className="flex items-center gap-3 bg-white p-1 rounded-lg shadow-sm">
                       <button onClick={() => updatePersonalQty(activePersonalDrink.id + '_warm', -1)} disabled={!(personalCart[activePersonalDrink.id + '_warm'])} className="w-8 h-8 flex items-center justify-center rounded-md text-gray-500 disabled:opacity-30 font-bold bg-gray-50 hover:bg-gray-100 transition-colors">-</button>
-                      <span className="w-6 text-center font-bold text-lg text-[#8E806A]">{personalCart[activePersonalDrink.id + '_warm'] || 0}</span>
+                      <input type="number" value={personalCart[activePersonalDrink.id + '_warm'] || ""} onChange={(e) => handlePersonalExactQty(activePersonalDrink.id + '_warm', e.target.value)} className="w-10 text-base text-center font-bold text-[#8E806A] bg-transparent outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
                       <button onClick={() => updatePersonalQty(activePersonalDrink.id + '_warm', 1)} className="w-8 h-8 flex items-center justify-center rounded-md bg-[#8E806A] text-white font-bold hover:bg-[#7a6d59] transition-colors">+</button>
                     </div>
                   </div>
@@ -1858,7 +1885,7 @@ const OwnerDashboard = ({ orders }) => {
                         <span className={`font-bold ${textColors[idx % 4]}`}>{opt.value + (opt.extraPrice ? ` (+$${opt.extraPrice})` : '')}</span>
                         <div className="flex items-center gap-3 bg-white p-1 rounded-lg shadow-sm">
                           <button onClick={() => updatePersonalQty(cartKey, -1)} disabled={!optQty} className="w-8 h-8 flex items-center justify-center rounded-md text-gray-500 disabled:opacity-30 font-bold bg-gray-50 hover:bg-gray-100 transition-colors">-</button>
-                          <span className="w-6 text-center font-bold text-lg text-[#8E806A]">{optQty}</span>
+                          <input type="number" value={optQty || ""} onChange={(e) => handlePersonalExactQty(cartKey, e.target.value)} className="w-10 text-base text-center font-bold text-[#8E806A] bg-transparent outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
                           <button onClick={() => updatePersonalQty(cartKey, 1)} className="w-8 h-8 flex items-center justify-center rounded-md bg-[#8E806A] text-white font-bold hover:bg-[#7a6d59] transition-colors">+</button>
                         </div>
                       </div>
