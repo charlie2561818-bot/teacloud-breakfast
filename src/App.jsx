@@ -1213,7 +1213,15 @@ const GuestView = ({ orders, forcedShopId, user, lang, setLang }) => {
           <div className="text-xs text-gray-500 flex flex-col justify-center">
             <div>{selectedRoom || "-"} • {totalQty}</div>
             <div className="text-xl font-bold text-[#8E806A]">${totalPrice}</div>
-            {selectedRoom && <div onClick={() => setIsRoomTotalModalOpen(true)} className="text-xs text-blue-500 underline mt-1 cursor-pointer">{t.roomTotalBtn}</div>}
+            {selectedRoom && (
+              <button 
+                onClick={() => setIsRoomTotalModalOpen(true)} 
+                className="inline-flex items-center justify-center gap-1.5 w-max mt-1 px-3 py-1.5 bg-gray-100 text-[#595045] rounded-full text-xs font-medium cursor-pointer active:bg-gray-200 transition-colors shadow-sm border border-gray-200"
+              >
+                <ClipboardList size={14} className="text-[#8E806A]" />
+                {t.roomTotalBtn}
+              </button>
+            )}
           </div>
           <div className="flex gap-2 flex-1">
             {orders.some(o => o.roomNumber === selectedRoom) && (
